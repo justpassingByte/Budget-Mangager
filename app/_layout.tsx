@@ -1,5 +1,7 @@
 import '../global.css'
 import { Stack } from 'expo-router';
+import { useCallback, useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { TransactionProvider } from '../hooks/useTransaction';
 import { SettingsProvider } from '../hooks/useSetting';
 import { PaperProvider, MD3DarkTheme, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
@@ -7,6 +9,9 @@ import { ThemeProvider } from '@react-navigation/native';
 import { useSettings } from '../hooks/useSetting';
 import { darkColors, lightColors } from '../theme';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+
+// Giữ splash screen hiển thị cho đến khi ứng dụng sẵn sàng
+SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { isDarkMode } = useSettings();
@@ -61,11 +66,20 @@ function AppContent() {
 }
 
 export default function AppLayout() {
+  const onLayoutRootView = useCallback(async () => {
+    // Ẩn splash screen khi ứng dụng đã sẵn sàng
+    await SplashScreen.hideAsync();
+  }, []);
+
+  useEffect(() => {
+    onLayoutRootView();
+  }, []);
+
   return (
     <LanguageProvider>
-    <SettingsProvider>
-      <AppContent />
-    </SettingsProvider>
+      <SettingsProvider>
+        <AppContent />
+      </SettingsProvider>
     </LanguageProvider>
   );
 }

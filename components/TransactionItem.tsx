@@ -14,7 +14,7 @@ interface TransactionItemProps {
 }
 
 export const TransactionItem = ({ transaction, isLast, colors, styles }: TransactionItemProps): JSX.Element => {
-  const { formatAmount } = useSettings() // Sử dụng formatAmount từ useSettings
+  const { settings } = useSettings()
   const { t } = useTranslation()
   const iconName = transaction.type === 'income' ? 'arrow-down-circle' : 'arrow-up-circle'
   const iconColor = transaction.type === 'income' ? colors.success : colors.error
@@ -35,12 +35,15 @@ export const TransactionItem = ({ transaction, isLast, colors, styles }: Transac
           {new Date(transaction.date).toLocaleDateString()}
         </Text>
       </View>
-      <Text style={{ 
-        color: transaction.type === 'income' ? colors.success : colors.error,
-        fontWeight: 'bold'
-      }}>
+      <Text 
+        style={[
+          styles.text,
+          { color: transaction.type === 'income' ? colors.success : colors.error }
+        ]} 
+        className="text-lg font-semibold"
+      >
         {transaction.type === 'income' ? '+' : '-'}
-        {formatAmount(transaction.amount)}
+        {formatCurrency(transaction.amount, settings.currency)}
       </Text>
     </View>
   )

@@ -5,7 +5,7 @@ import { router } from 'expo-router'
 import { useTransactions } from '../../hooks/useTransaction'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { LineChart } from 'react-native-chart-kit'
-import type { Transaction } from '../../type'
+import type { Transaction, TransactionCategory } from '../../type'
 import { createThemedStyles, darkColors } from '@/theme'
 import { useTranslation } from '@/contexts/LanguageContext'
 import { TransactionItem } from '../../components/TransactionItem'
@@ -14,34 +14,37 @@ import { useSettings } from '@/hooks/useSetting'
 import { convertCurrency, formatCurrency } from '@/utils/currency'
 
 export default function HomeScreen(): JSX.Element {
-  const { transactions } = useTransactions()
-  const { isDarkMode, settings, convertAmount, formatAmount } = useSettings()
-  const styles = createThemedStyles(isDarkMode)
-  const colors = isDarkMode ? darkColors : lightColors
+  const { transactions } = useTransactions() as { transactions: Array<Transaction & { category: TransactionCategory }> }
+  const { settings } = useSettings()
+  const styles = createThemedStyles(settings.darkMode)
+  const colors = settings.darkMode ? darkColors : lightColors
   const { t } = useTranslation()
   const screenWidth = Dimensions.get('window').width
   
-  // Tính toán số dư với tiền tệ hiện tại
+  // Tính toán số dư với quy đổi tiền tệ
   const balance = transactions.reduce((total, transaction) => {
-    // Chuyển đổi số tiền từ VND sang currency hiện tại
-    const convertedAmount = convertAmount(transaction.amount, 'VND', settings.currency)
-    return transaction.type === 'income' ? total + convertedAmount : total - convertedAmount
+    const convertedAmount = convertCurrency(
+      transaction.amount,
+      transaction.currency,
+      settings.currency
+    );
+    return transaction.type === 'income' ? total + convertedAmount : total - convertedAmount;
   }, 0)
 
-  // Tính tổng thu nhập và chi tiêu với tiền tệ hiện tại
+  // Tính tổng thu nhập và chi tiêu với quy đổi tiền tệ
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => {
-      const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-      return sum + convertedAmount
-    }, 0)
+      const convertedAmount = convertCurrency(t.amount, t.currency, settings.currency);
+      return sum + convertedAmount;
+    }, 0);
     
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => {
-      const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-      return sum + convertedAmount
-    }, 0)
+      const convertedAmount = convertCurrency(t.amount, t.currency, settings.currency);
+      return sum + convertedAmount;
+    }, 0);
 
   // Lấy 5 giao dịch gần nhất
   const recentTransactions = [...transactions]
@@ -66,7 +69,7 @@ export default function HomeScreen(): JSX.Element {
 
   return (
     <SafeAreaView style={{ backgroundColor: colors.background }} className="flex-1">
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <StatusBar style={settings.darkMode ? 'light' : 'dark'} />
       <ScrollView className="flex-1">
         <View style={{ backgroundColor: colors.primary }} className="px-6 py-8">
           <Text style={styles.text} className="text-2xl font-bold mb-1">{t('screens.home.greeting')}</Text>

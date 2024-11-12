@@ -1,11 +1,6 @@
-import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from 'react-native';
-import { 
-  CURRENCY_CONFIG, 
-  convertCurrency, 
-  formatCurrency
-} from '../utils/currency';
 
 interface Settings {
   darkMode: boolean;
@@ -22,8 +17,6 @@ interface SettingsContextType {
   toggleDarkMode: () => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setLanguage: (language: string) => Promise<void>;
-  convertAmount: (amount: number, fromCurrency: string) => number;
-  formatAmount: (amount: number, fromCurrency: string) => string;
 }
 
 const defaultSettings: Settings = {
@@ -36,6 +29,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadSettings();
@@ -46,11 +40,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const savedSettings = await AsyncStorage.getItem('settings');
       if (savedSettings) {
         setSettings(JSON.parse(savedSettings));
-      } else {
-        await AsyncStorage.setItem('settings', JSON.stringify(defaultSettings));
       }
     } catch (error) {
-      console.error('Lỗi khi tải cài đặt:', error);
+      console.error('Lỗi khi tải settings:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,42 +54,51 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSettings(updatedSettings);
       await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
     } catch (error) {
-      console.error('Lỗi khi cập nhật cài đặt:', error);
+      console.error('Lỗi khi cập nhật settings:', error);
     }
   };
 
-  const formatAmount = useCallback((amount: number, fromCurrency: string = 'VND') => {
-    const convertedAmount = convertCurrency(amount, fromCurrency, settings.currency);
-    return formatCurrency(convertedAmount, settings.currency);
-  }, [settings.currency]);
+  const setCurrency = async (newCurrency: string) => {
+    try {
+      const updatedSettings = { ...settings, currency: newCurrency };
+      setSettings(updatedSettings);
+      await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
+    } catch (error) {
+      console.error('Lỗi khi cập nhật tiền tệ:', error);
+    }
+  };
+
+  const setLanguage = async (newLanguage: string) => {
+    try {
+      const updatedSettings = { ...settings, language: newLanguage };
+      setSettings(updatedSettings);
+      await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
+    } catch (error) {
+      console.error('Lỗi khi cập nhật ngôn ngữ:', error);
+    }
+  };
+
+  const toggleDarkMode = async () => {
+    try {
+      const updatedSettings = { ...settings, darkMode: !settings.darkMode };
+      setSettings(updatedSettings);
+      await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
+    } catch (error) {
+      console.error('Lỗi khi thay đổi dark mode:', error);
+    }
+  };
 
   return (
-    <SettingsContext.Provider 
-      value={{ 
-        settings, 
-        isDarkMode: settings.darkMode, 
-        isLoading: false, 
-        updateSettings, 
-        resetSettings: loadSettings, 
-        toggleDarkMode: async () => {
-          const updatedSettings = { ...settings, darkMode: !settings.darkMode };
-          setSettings(updatedSettings);
-          await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
-        },  
-        setCurrency: async (currency: string) => {
-          const updatedSettings = { ...settings, currency };
-          setSettings(updatedSettings);
-          await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
-        }, 
-        setLanguage: async (language: string) => {
-          const updatedSettings = { ...settings, language };
-          setSettings(updatedSettings);
-          await AsyncStorage.setItem('settings', JSON.stringify(updatedSettings));
-        }, 
-        convertAmount: (amount: number, fromCurrency: string) => {
-          return convertCurrency(amount, fromCurrency, settings.currency);
-        }, 
-        formatAmount
+    <SettingsContext.Provider
+      value={{
+        settings,
+        isDarkMode: settings.darkMode,
+        isLoading,
+        updateSettings,
+        resetSettings: loadSettings,
+        toggleDarkMode,
+        setCurrency,
+        setLanguage,
       }}
     >
       {children}

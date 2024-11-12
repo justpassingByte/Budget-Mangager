@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateSampleData } from '../utils/sampleData';
+import { useSettings } from './useSetting';
+import { convertCurrency } from '../utils/currency';
 
 interface Transaction {
   id: string;
@@ -9,21 +10,23 @@ interface Transaction {
   category: string;
   date: Date;
   note?: string;
+  currency: string;
 }
 
 interface TransactionContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'currency'>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
-  getBalance: () => number;
+  getBalance: () => { amount: number; currency: string };
+  getCurrentCurrency: () => string;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-export function TransactionProvider({ children }: { children: ReactNode }) {
+function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { settings } = useSettings();
 
-  // Load dữ liệu khi khởi động
   useEffect(() => {
     loadTransactions();
   }, []);
@@ -32,27 +35,31 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     try {
       const savedTransactions = await AsyncStorage.getItem('transactions');
       if (savedTransactions) {
-        setTransactions(JSON.parse(savedTransactions));
-      } else {
-        // Nếu chưa có dữ liệu, tạo dữ liệu mẫu
-        const sampleData = generateSampleData();
-        await AsyncStorage.setItem('transactions', JSON.stringify(sampleData));
-        setTransactions(sampleData);
+        const parsedTransactions = JSON.parse(savedTransactions);
+        const formattedTransactions = parsedTransactions.map((t: any) => ({
+          ...t,
+          date: new Date(t.date),
+          currency: t.currency || settings.currency
+        }));
+        setTransactions(formattedTransactions);
       }
     } catch (error) {
-      console.error('Lỗi khi tải dữ liệu từ AsyncStorage:', error);
+      console.error('Lỗi khi tải giao dịch:', error);
     }
   };
 
-  const addTransaction = async (data: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (data: Omit<Transaction, 'id' | 'currency'>) => {
     try {
       const newId = Date.now().toString();
       const newTransactionWithId = {
         ...data,
         id: newId,
         note: data.note?.trim() || '',
-        date: new Date(data.date)
+        date: new Date(data.date),
+        currency: settings.currency,
+        amount: data.amount
       };
+      
       const updatedTransactions = [...transactions, newTransactionWithId];
       setTransactions(updatedTransactions);
       await AsyncStorage.setItem('transactions', JSON.stringify(updatedTransactions));
@@ -67,24 +74,58 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       setTransactions(updatedTransactions);
       await AsyncStorage.setItem('transactions', JSON.stringify(updatedTransactions));
     } catch (error) {
-      console.error('Lỗi khi xóa giao dịch:', error);
+      console.error('Error deleting transaction:', error);
     }
   };
 
   const getBalance = () => {
-    return transactions.reduce((total, transaction) => {
-      return transaction.type === 'income' 
-        ? total + transaction.amount 
-        : total - transaction.amount
+    const totalBalance = transactions.reduce((total, transaction) => {
+      const amount = transaction.currency === settings.currency 
+        ? transaction.amount 
+        : convertCurrency(transaction.amount, transaction.currency || 'VND', settings.currency);
+      
+      return transaction.type === 'income' ? total + amount : total - amount;
     }, 0);
+
+    return {
+      amount: totalBalance,
+      currency: settings.currency
+    };
   };
+
+  useEffect(() => {
+    const updateTransactionsCurrency = async () => {
+      if (transactions.length === 0) return;
+
+      const updatedTransactions = transactions.map(transaction => {
+        if (transaction.currency === settings.currency) {
+          return transaction;
+        }
+        return {
+          ...transaction,
+          amount: convertCurrency(
+            transaction.amount, 
+            transaction.currency || 'VND', 
+            settings.currency
+          ),
+          currency: settings.currency
+        };
+      });
+
+      setTransactions(updatedTransactions);
+      await AsyncStorage.setItem('transactions', JSON.stringify(updatedTransactions));
+    };
+
+    updateTransactionsCurrency();
+  }, [settings.currency]);
 
   return (
     <TransactionContext.Provider value={{ 
       transactions, 
       addTransaction,
       deleteTransaction,
-      getBalance 
+      getBalance,
+      getCurrentCurrency: () => settings.currency
     }}>
       {children}
     </TransactionContext.Provider>
@@ -98,3 +139,5 @@ export function useTransactions() {
   }
   return context;
 }
+
+export { TransactionProvider };

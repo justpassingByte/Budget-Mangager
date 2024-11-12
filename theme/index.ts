@@ -10,9 +10,13 @@ export const lightColors = {
   border: '#E5E7EB',
   card: '#FFFFFF',
   success: '#10B981',
+  successLight: '#dcfce7',
   error: '#EF4444',
+  errorLight: '#fee2e2',
   warning: '#F59E0B',
   iconBackground: '#F3F4F6',
+  primaryLight: '#your_color_here',
+  overlay: 'rgba(0, 0, 0, 0.5)',
 };
 
 export const darkColors = {
@@ -24,9 +28,14 @@ export const darkColors = {
   border: '#4B5563',
   card: '#374151',
   success: '#34D399',
+  successLight: '#052e16',
   error: '#F87171',
+  errorLight: '#450a0a',
   warning: '#FBBF24',
   iconBackground: '#374151',
+  primaryLight: '#your_color_here', 
+  overlay: 'rgba(0, 0, 0, 0.7)',
+
 };
 
 // Spacing

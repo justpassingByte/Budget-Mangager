@@ -1,15 +1,16 @@
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Modal, Dimensions, Alert, Pressable } from 'react-native'
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useTransactions } from '../../hooks/useTransaction'
-import { FontAwesome } from '@expo/vector-icons'
-import { BarChart } from 'react-native-chart-kit' 
-import SpendingAlerts from '@/components/SpendingAlerts'
-import { PieChart } from 'react-native-chart-kit'
-import { EXPENSE_CATEGORIES } from '../../utils/categories'
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, Alert, Modal } from 'react-native';
+import { useTransactions } from '../../hooks/useTransaction';
 import { useSettings } from '../../hooks/useSetting';
 import { createThemedStyles, darkColors, lightColors } from '../../theme';
 import { useTranslation } from '../../contexts/LanguageContext';
 import { convertCurrency, formatCurrency } from '@/utils/currency'
+import { useCallback, useEffect, useMemo } from 'react';
+import { useState } from 'react';
+import { BarChart, PieChart } from 'react-native-chart-kit';
+import SpendingAlerts from '@/components/SpendingAlerts';
+import { FontAwesome } from '@expo/vector-icons';
+import { Transaction } from '@/type';
+import { EXPENSE_CATEGORIES } from '@/utils/categories';
 
 type FilterPeriod = 'day' | 'week' | 'month' | 'year'
 
@@ -18,7 +19,7 @@ export default function StatisticsScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false)
   const { transactions, deleteTransaction } = useTransactions()
   const [alerts, setAlerts] = useState<{ type: 'warning' | 'danger', message: string }[]>([])
-  const { isDarkMode, settings, convertAmount, formatAmount } = useSettings();
+  const { isDarkMode, settings} = useSettings();
   const styles = createThemedStyles(isDarkMode);
   const colors = isDarkMode ? darkColors : lightColors;
   const { t, currentLanguage } = useTranslation();
@@ -52,19 +53,19 @@ export default function StatisticsScreen() {
     return filteredTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
-  }, [filteredTransactions, settings.currency])
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
+  }, [filteredTransactions, settings.currency]);
     
   const totalExpense = useMemo(() => {
     return filteredTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
-  }, [filteredTransactions, settings.currency])
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
+  }, [filteredTransactions, settings.currency]);
 
   const getCompareLabel = () => {
     switch (filterPeriod) {
@@ -159,36 +160,36 @@ export default function StatisticsScreen() {
     const currentIncome = currentPeriodData
       .filter(t => t.type === 'income')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
     
     const currentExpense = currentPeriodData
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
 
     const previousIncome = previousPeriodData
       .filter(t => t.type === 'income')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
     
     const previousExpense = previousPeriodData
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => {
-        const convertedAmount = convertAmount(t.amount, 'VND', settings.currency)
-        return sum + convertedAmount
-      }, 0)
+        const convertedAmount = convertCurrency(t.amount, t.currency || 'VND', settings.currency);
+        return sum + convertedAmount;
+      }, 0);
 
     return {
       current: { income: currentIncome, expense: currentExpense },
       previous: { income: previousIncome, expense: previousExpense }
-    }
-  }, [filterPeriod, transactions, settings.currency])
+    };
+  }, [filterPeriod, transactions, settings.currency]);
 
   const calculateAlerts = useMemo(() => {
     const newAlerts: { type: 'warning' | 'danger', message: string }[] = []
@@ -201,7 +202,7 @@ export default function StatisticsScreen() {
         return t.type === 'expense' && 
                transDate.toDateString() === today.toDateString()
       })
-      .reduce((sum, t) => sum + convertAmount(t.amount, 'VND', settings.currency), 0)
+      .reduce((sum, t) => sum + convertCurrency(t.amount, t.currency || 'VND', settings.currency), 0)
 
     const averageDailyExpense = totalExpense / 30
 
@@ -399,7 +400,7 @@ export default function StatisticsScreen() {
       </View>
 
       <ScrollView className="flex-1 p-4">
-        <SpendingAlerts 
+        <SpendingAlerts  
           alerts={alerts}
           onDismiss={handleDismissAlert}
         />
@@ -555,7 +556,10 @@ export default function StatisticsScreen() {
                           { fontSize: 16, fontWeight: 'bold' }
                         ]}>
                           {transaction.type === 'income' ? '+' : '-'}
-                          {formatCurrency(convertAmount(transaction.amount, 'VND', settings.currency), settings.currency)}
+                          {formatCurrency(
+                            convertCurrency(transaction.amount, transaction.currency || 'VND', settings.currency),
+                            settings.currency
+                          )}
                         </Text>
                       </View>
                       

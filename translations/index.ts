@@ -42,7 +42,11 @@ export const translations = {
       health: 'Sức khỏe',
       education: 'Giáo dục',
       bills: 'Hóa đơn',
-      others: 'Khác'
+      others: 'Khác',
+      investment: 'Đầu tư',
+      housing: 'Nhà ở',
+      gift: 'Quà tặng',
+      personal: 'Cá nhân',
     },
     screens: {
       home: {
@@ -175,7 +179,11 @@ export const translations = {
       health: 'Health',
       education: 'Education',
       bills: 'Bills',
-      others: 'Others'
+      others: 'Others',
+      investment: 'Investment',
+      housing: 'Housing',
+      gift: 'Gift',
+      personal: 'Personal',
     },
     screens: {
       home: {
@@ -297,7 +305,11 @@ export const translations = {
       health: '健康',
       education: '教育',
       bills: '账单',
-      others: '其他'
+      others: '其他',
+      investment: '投资',
+      housing: '住房',
+      gift: '礼物',
+      personal: '个人',
     },
     screens: {
       home: {
@@ -419,7 +431,11 @@ export const translations = {
       health: '건강',
       education: '교육',
       bills: '청구서',
-      others: '기타'
+      others: '기타',
+      investment: '투자',
+      housing: '주택',
+      gift: '선물',
+      personal: '개인',
     },
     screens: {
       home: {

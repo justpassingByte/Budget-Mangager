@@ -21,8 +21,14 @@ export default function IncomeScreen() {
     return `${t('screens.income.enterAmount')} (${CURRENCY_CONFIG[settings.currency].symbol})`
   }
 
+  const formatAmount = (value: string) => {
+    const cleanValue = value.replace(/[^0-9]/g, '')
+    return cleanValue
+  }
+
   const handleSave = () => {
     const numAmount = Number(amount)
+    
     if (isNaN(numAmount) || numAmount <= 0) {
       Alert.alert(
         t('common.error'), 
@@ -40,7 +46,7 @@ export default function IncomeScreen() {
     }
 
     addTransaction({
-      amount: Number(amount),
+      amount: numAmount,
       type: 'income',
       date: new Date(),
       note: note.trim(),
@@ -74,7 +80,7 @@ export default function IncomeScreen() {
               placeholderTextColor={colors.secondaryText}
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(text) => setAmount(formatAmount(text))}
             />
           </View>
 

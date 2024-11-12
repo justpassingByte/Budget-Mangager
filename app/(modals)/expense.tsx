@@ -10,6 +10,14 @@ import { FontAwesome } from '@expo/vector-icons'
 import { EXPENSE_CATEGORIES } from '../../utils/categories'
 import { CURRENCY_CONFIG } from '../../utils/currency'
 
+type IconName = keyof typeof FontAwesome.glyphMap
+
+interface ExpenseCategory {
+  id: string
+  icon: IconName
+  color: string
+}
+
 export default function ExpenseScreen() {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -29,8 +37,12 @@ export default function ExpenseScreen() {
 
   const handleSave = () => {
     const numAmount = Number(amount)
+    
     if (isNaN(numAmount) || numAmount <= 0) {
-      Alert.alert(t('common.error'), t('common.pleaseEnterAmount'))
+      Alert.alert(
+        t('common.error'), 
+        t('common.invalidAmount')
+      )
       return
     }
 
@@ -48,8 +60,14 @@ export default function ExpenseScreen() {
       Alert.alert(
         t('common.insufficientBalance'),
         t('common.balanceNotEnough', {
-          balance: currentBalance.toLocaleString(),
-          amount: numAmount.toLocaleString()
+          balance: currentBalance.toLocaleString(undefined, {
+            style: 'currency',
+            currency: settings.currency
+          }),
+          amount: numAmount.toLocaleString(undefined, {
+            style: 'currency',
+            currency: settings.currency
+          })
         })
       )
       return
@@ -71,6 +89,13 @@ export default function ExpenseScreen() {
   // Thêm hàm format placeholder
   const getAmountPlaceholder = () => {
     return `${t('fields.enterAmount')} (${CURRENCY_CONFIG[settings.currency].symbol})`
+  }
+
+  // Thêm hàm format số tiền theo định dạng tiền tệ
+  const formatAmount = (value: string) => {
+    // Chỉ cho phép nhập số
+    const cleanValue = value.replace(/[^0-9]/g, '')
+    return cleanValue
   }
 
   return (
@@ -96,7 +121,7 @@ export default function ExpenseScreen() {
               placeholderTextColor={colors.secondaryText}
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(text) => setAmount(formatAmount(text))}
             />
           </View>
 
@@ -116,7 +141,7 @@ export default function ExpenseScreen() {
                     style={{ backgroundColor: selectedCategoryData.color }} 
                     className="w-8 h-8 rounded-full items-center justify-center mr-2"
                   >
-                    <FontAwesome name={selectedCategoryData.icon} size={16} color="white" />
+                    <FontAwesome name={selectedCategoryData.icon as IconName} size={16} color="white" />
                   </View>
                   <Text style={styles.text}>{t(`categories.${selectedCategoryData.id}`)}</Text>
                 </>
@@ -182,7 +207,7 @@ export default function ExpenseScreen() {
                     style={{ backgroundColor: category.color }} 
                     className="w-12 h-12 rounded-full items-center justify-center mb-2"
                   >
-                    <FontAwesome name={category.icon} size={24} color="white" />
+                    <FontAwesome name={category.icon as IconName} size={24} color="white" />
                   </View>
                   <Text style={styles.text} className="text-center text-sm">{t(`categories.${category.id}`)}</Text>
                 </TouchableOpacity>

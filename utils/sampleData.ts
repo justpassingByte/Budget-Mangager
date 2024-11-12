@@ -31,7 +31,7 @@ export const generateSampleData = (): Transaction[] => {
       type: 'expense',
       date: new Date(now.setDate(now.getDate() - 2)),
       note: 'Đổ xăng',
-      category: 'transportation'
+      category: 'transport'
     },
 
     // Tuần trước
@@ -65,7 +65,7 @@ export const generateSampleData = (): Transaction[] => {
       type: 'expense',
       date: new Date(now.setDate(now.getDate() - 16)),
       note: 'Tiền điện nước',
-      category: 'utilities'
+      category: 'bills'
     },
     {
       id: '8',
