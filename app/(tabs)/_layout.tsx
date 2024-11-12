@@ -1,34 +1,33 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
+import { FontAwesome } from '@expo/vector-icons';
+import '../../global.css'
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-      }}>
-      <Tabs.Screen
-        name="index"
+    <Tabs screenOptions={{ headerShown: false }}>
+      <Tabs.Screen 
+        name="index" 
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+          title: 'Tổng quan',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={24} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="explore"
+      <Tabs.Screen 
+        name="statistics" 
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+          title: 'Thống kê',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="bar-chart" size={24} color={color} />
+          ),
+        }}
+      />
+         <Tabs.Screen 
+        name="setting" 
+        options={{
+          title: 'Cài đặt',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="cog" size={24} color={color} />
           ),
         }}
       />

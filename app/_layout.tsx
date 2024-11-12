@@ -1,37 +1,71 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import '../global.css'
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { TransactionProvider } from '../hooks/useTransaction';
+import { SettingsProvider } from '../hooks/useSetting';
+import { PaperProvider, MD3DarkTheme, MD3LightTheme, adaptNavigationTheme } from 'react-native-paper';
+import { ThemeProvider } from '@react-navigation/native';
+import { useSettings } from '../hooks/useSetting';
+import { darkColors, lightColors } from '../theme';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+function AppContent() {
+  const { isDarkMode } = useSettings();
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+  const paperTheme = {
+    ...(isDarkMode ? MD3DarkTheme : MD3LightTheme),
+    colors: {
+      ...(isDarkMode ? MD3DarkTheme.colors : MD3LightTheme.colors),
+      ...(isDarkMode ? darkColors : lightColors),
+    },
+  };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const { DarkTheme, LightTheme } = adaptNavigationTheme({
+    reactNavigationLight: paperTheme,
+    reactNavigationDark: paperTheme,
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
+  const navigationTheme = isDarkMode ? DarkTheme : LightTheme;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <PaperProvider theme={paperTheme}>
+      <ThemeProvider value={navigationTheme}>
+        <TransactionProvider>
+          <Stack screenOptions={{
+            contentStyle: { backgroundColor: isDarkMode ? darkColors.background : lightColors.background }
+          }}>
+            <Stack.Screen 
+              name="(tabs)" 
+              options={{ headerShown: false }} 
+            />
+            <Stack.Screen 
+              name="(modals)/income" 
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen 
+              name="(modals)/expense" 
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'slide_from_bottom',
+              }}
+            />
+          </Stack>
+        </TransactionProvider>
+      </ThemeProvider>
+    </PaperProvider>
+  );
+}
+
+export default function AppLayout() {
+  return (
+    <LanguageProvider>
+    <SettingsProvider>
+      <AppContent />
+    </SettingsProvider>
+    </LanguageProvider>
   );
 }
